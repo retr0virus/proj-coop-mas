@@ -36,6 +36,18 @@ public class ImageLoader {
 		}
 		return true;
 	}
+
+	/**
+	  * The width if the image is set or -1.
+	  * @return the width of the image or -1
+	  */
+	public int getWidth() { return this.width; }
+	/**
+	  * The height if the image is set or -1.
+	  * @return the height of the image or -1
+	  */
+	public int getHeight() { return this.height; }
+
 	/**
 	 * Returns the 8byte color-value for a given position in the image.
 	 * 2byte alpha, 2byte red, 2byte green, 2byte blue (0xAARRGGBB)
@@ -92,6 +104,7 @@ public class ImageLoader {
 		int val = getValue(x,y);
 		return val == -1 ? -1 : ((val >> 0)&0xff);
 	}
+
 	/**
 	 * The alpha value at a given point, rounded to the next int values.
 	 * @param x the column (gets rounded to the next int)
