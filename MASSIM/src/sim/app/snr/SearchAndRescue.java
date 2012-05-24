@@ -6,6 +6,7 @@ import sim.app.snr.agent.Caller;
 import sim.app.snr.agent.Searcher;
 import sim.engine.*;
 import sim.field.grid.SparseGrid2D;
+import sim.field.grid.IntGrid2D;
 
 public class SearchAndRescue extends SimState {
 
@@ -13,23 +14,33 @@ public class SearchAndRescue extends SimState {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public final String imgFile = "img/map.png";
+	public String imgFile = "img/map.png";
 	public Terrain terrain;
 	public SparseGrid2D agentGrid;
-	public int numAgents = 1;
+	public IntGrid2D baseMapGrid;
+	public int numTeams = 1;
+	public int numAgentsPerTeam = 1;
+	public int numCallerPerTeam = 1;
 	
-	public SearchAndRescue(long seed) {
+	public SearchAndRescue(long seed, String imgfile) {
 		super(seed);
 		try {
-			terrain = new Terrain(imgFile);
+		    if (imgfile != null) imgFile = imgfile;
+		    terrain = new Terrain(imgFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		agentGrid = new SparseGrid2D(terrain.area.getWidth(),terrain.area.getHeight());
+		int scale = 10;
+		baseMapGrid = new IntGrid2D(terrain.area.getWidth()/scale,terrain.area.getHeight()/scale);
 	}
 
-    public int getNumAngents() { return numAgents; }
-    public void setNumAnts(int val) {if (val > 0) numAgents = val; }
+    public int getNumTeams() { return numTeams; }
+    public void setNumTeams(int val) {if (val > 0) numTeams = val; }
+    public int getNumCallerPerTeam() { return numCallerPerTeam; }
+    public void setNumCallerPerTeam(int val) {if (val > 0) numCallerPerTeam = val; }
+    public int getNumAgentsPerTeam() { return numAgentsPerTeam; }
+    public void setNumAgentsPerTeam(int val) {if (val > 0) numAgentsPerTeam = val; }
 	
 	
 	public void start() {
@@ -45,16 +56,19 @@ public class SearchAndRescue extends SimState {
 				}
 			}
 		}
-		Caller c = new Caller();
-		agentGrid.setObjectLocation(c, startx,starty);
-		schedule.scheduleRepeating(c);
+		for (int i=0; i<numTeams; ++i) {
+		    Caller c = new Caller();
+		    agentGrid.setObjectLocation(c, startx,starty);
+		    schedule.scheduleRepeating(c);
 		
-		for (int i=0; i<numAgents; i++) {
+		    for (int j=0; j<numAgentsPerTeam; j++) {
 			Searcher x = new Searcher(c);
 			c.addTeamMember(x);
 			agentGrid.setObjectLocation(x, startx,starty);
 			schedule.scheduleRepeating(x);
+		    }
 		}
+		
 	}
 
 	public static void main(String[] args) {

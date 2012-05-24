@@ -11,29 +11,42 @@ import sim.util.Int2D;
 import sim.util.IntBag;
 
 public abstract class AbstractAgent implements Steppable {
-	
 	protected SearchAndRescue snr;
-	protected Int2D dir = new Int2D(0,1);
+	protected Int2D[] directions = new Int2D[] { 
+			new Int2D(1,0), new Int2D(1,-1), new Int2D(0,-1), new Int2D(-1,-1), 
+			new Int2D(-1,0), new Int2D(-1,1), new Int2D(0,1), new Int2D(1,1)
+	};
+	protected int dir = 0;
 	protected Int2D pos;
+	
+	protected int viewRadius = 0; // editable
+	protected int communicationRadius = 0; // editable
+	
 	protected IntBag terrainValues;
 	protected IntBag terrainXCoords;
 	protected IntBag terrainYCoords;
+	
 	protected Bag agents = new Bag();
 	protected IntBag agentsXCoords =  new IntBag();
 	protected IntBag agentsYCoords = new IntBag();
-	protected int viewRadius = 0;
-	protected int communicationRadius = 0;
 	
 	protected void forward() {
-		snr.agentGrid.setObjectLocation(this, pos.x+dir.x,pos.y+dir.y);
+		snr.agentGrid.setObjectLocation(this, pos.x+directions[dir].x,pos.y+directions[dir].y);
 	}
 	
 	protected void turnLeft(){
-		dir = new Int2D(dir.y,dir.x * -1);
+		//dir = new Int2D(dir.y,dir.x * -1);
+		dir = (dir == directions.length-1) ? 0 : dir+1;
+	}
+	protected void turnRight(){
+		//dir = new Int2D(dir.y * -1, dir.x);
+		dir = (dir == 0) ? directions.length-1 : dir-1;
 	}
 	
-	protected void turnRight(){
-		
+	public int getCommunicationRadius() { return communicationRadius; }
+	public void setCommunicationRadius(int c) {
+		if (c > 0)
+			this.communicationRadius = c;
 	}
 	
 	protected void examineTerrain(){
@@ -41,7 +54,7 @@ public abstract class AbstractAgent implements Steppable {
 	}
 	
 	protected boolean nextIsFree(){
-		if (snr.terrain.area.get(pos.x+dir.x, pos.y+dir.y) != Terrain.WALL)
+		if (snr.terrain.area.get(pos.x+directions[dir].x, pos.y+directions[dir].y) != Terrain.WALL)
 			return true;
 		return false;
 	}
@@ -54,19 +67,25 @@ public abstract class AbstractAgent implements Steppable {
 		pos = snr.agentGrid.getObjectLocation(this);
 	}
 	
+	/**
+	 * Messages are only transmitted to agents within the communication radius.
+	 * @param m
+	 */
 	protected void sendMessage(Message m){
-		lookupAgents();
+		lookupReceivingAgents();
 		for (int i=0;i< agents.size();i++){
-			if (agents.get(i) == m.receiver)
+			if (agents.get(i) == m.receiver || m.receiver == null) {
 					m.transmit();
+			}
 		}
 	}
 	
-	private void lookupAgents(){
-		snr.agentGrid.getNeighborsHexagonalDistance(pos.x, pos.y, communicationRadius, false, agents,agentsXCoords, agentsYCoords);
+	private void lookupReceivingAgents(){
+		snr.agentGrid.getNeighborsHexagonalDistance(pos.x, pos.y, communicationRadius, false, agents, agentsXCoords, agentsYCoords);
 	}
 	
 	public abstract void receiveMessage(Message m);
 	public abstract void receivePing(Ping p);
 	
+	@Override public String toString() { return "Nevermind|"+this.getClass().getName()+"@"+this.hashCode(); }
 }

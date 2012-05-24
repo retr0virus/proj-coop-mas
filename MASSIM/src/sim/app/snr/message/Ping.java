@@ -12,7 +12,7 @@ public class Ping extends Message {
 	@Override
 	public void transmit() {
 		receiver.receivePing(this);
-		
+		//receiver.receiveMessage(this);
 	}
 
 

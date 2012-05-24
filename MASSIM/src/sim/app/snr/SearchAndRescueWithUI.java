@@ -9,17 +9,19 @@ import sim.display.GUIState;
 import sim.engine.SimState;
 import sim.portrayal.grid.FastValueGridPortrayal2D;
 import sim.portrayal.grid.SparseGridPortrayal2D;
+import sim.portrayal.grid.ValueGridPortrayal2D;
 import sim.portrayal.simple.OvalPortrayal2D;
 
 public class SearchAndRescueWithUI extends GUIState {
 
 	FastValueGridPortrayal2D terrainPortrayal = new FastValueGridPortrayal2D("Terrain");
 	SparseGridPortrayal2D agentPortrayal = new SparseGridPortrayal2D();
+	ValueGridPortrayal2D baseMapPortrayal = new ValueGridPortrayal2D();
 	public Display2D display;
 	public JFrame displayFrame;
 
-	public SearchAndRescueWithUI() {
-		super(new SearchAndRescue(System.currentTimeMillis()));
+	public SearchAndRescueWithUI(String imgfile) {
+		super(new SearchAndRescue(System.currentTimeMillis(),imgfile));
 	}
 
 	public SearchAndRescueWithUI(SimState state) {
@@ -29,15 +31,26 @@ public class SearchAndRescueWithUI extends GUIState {
 	public static String getName() {
 		return "Search And Rescue MAS";
 	}
+	
+	public Object getSimulationInspectedObject() { return state; }
+	/*public sim.portrayal.Inspector getInspector() {
+	    sim.portrayal.Inspector i = super.getInspector();
+	    i.setVolatile(true);
+	    return i;
+	}*/
 
 	public void start() {
-		super.start();
+		super.start(); // starts the state too
 		SearchAndRescue snr = (SearchAndRescue) state;
 		terrainPortrayal.setField(snr.terrain.area);
 		terrainPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				snr.terrain.colorTable));
 		agentPortrayal.setField(snr.agentGrid);
 		agentPortrayal.setPortrayalForAll(new OvalPortrayal2D(10));
+
+		baseMapPortrayal.setField(snr.baseMapGrid);
+		baseMapPortrayal.setMap(new sim.util.gui.SimpleColorMap(snr.terrain.colorTable));
+		baseMapPortrayal.setPortrayalForAll(new OvalPortrayal2D(5));
 
 		display.reset();
 		display.setBackdrop(Color.white);
@@ -72,6 +85,10 @@ public class SearchAndRescueWithUI extends GUIState {
 	}
 
 	public static void main(String[] args) {
-		new SearchAndRescueWithUI().createController();
+	    String imgfile = null;
+	    if (args.length > 0) {
+		imgfile = args[0];
+	    }
+	    new SearchAndRescueWithUI(imgfile).createController();
 	}
 }

@@ -15,7 +15,6 @@ public class Caller extends AbstractAgent {
 	public void addTeamMember(AbstractAgent a ){
 		team.add(a);
 	}
-
 	
 	@Override
 	public void step(SimState state) {

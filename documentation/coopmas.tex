@@ -1,0 +1,42 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+
+%\author{M.~M., R.~H.}
+%\title{Projekt Diskrete Simulation 2012\\Kooperation in Multi-Agenten Systemen\\FG Simulation und Modellierung\\Leibniz Universität Hannover}
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+	{\huge Dokumentation}\\
+	\vskip 4em
+	{\Large Projekt Diskrete Simulation}\\
+	\vskip 3em
+	{\huge Kooperation in Multi-Agenten Systemen}\\
+	\vskip 3em
+	{\Large Sommersemester 2012}\\
+	\vskip 2em
+	FG Simulation und Modellierung\\
+	Leibniz Universität Hannover\\
+	\vskip 4em
+	M.~Miebach und R.~Hohndorf
+    \end{center}
+\end{titlepage}
+%\maketitle
+
+\section{Aufbau des Simulators}
+\subsection{Agenten}
+Die Simulation kennt zwei verschiedene Agententypen: Den \emph{Funker} und den \emph{Sucher}.
+Der \textbf{Funker} ist ein langsamer Agent, der eine sichere Kommunikationsmöglichkeit zur \emph{Basis} besitzt. Er dient als Vermittlungsstelle zwischen Sucher und Basis und kann Karteninformationen und Untersuchungsergebnisse weiterleiten.
+Der \textbf{Sucher} ist ein Agent, der sich doppelt so schnell bewegen kann wie der \emph{Funker}. Er besitzt nur eine schwache Kommunikationseinheit, ist dafür aber in der Lage, das zu erkundende Gebiet genauer zu untersuchen und dort möglicher vermisste Personen aufzuspüren.
+Die \textbf{Basis} ist eine theoretische, angenommene Größe des Systems. Sie steht im Kontakt mit dem Funker und bestätigt und verteilt Informationen über Interessenspunkte und Karte an die Funker und damit (indirekt) an die Sucher.
+\subsection{Karte}
+Die Karte, auf dem die Simulation abläuft, wird beim Start des Simulators aus einer Grafik generiert.
+Die Farbinformation der Pixel bilden den Aufbau des Geländes ab. Ein schwarzer Punkt bedeutet eine Wand, ein weißer Punkt stellt freies Gelände dar, ein roter Punkt ein Gebiet von Interesse und ein blauer Punkt den Anfang, auf dem die Agenten starten.
+\subsection{Interne Karte}
+Basis und Agenten kennen die gesamte Karte am Anfang der Simulation noch nicht. Erst über die Zeit decken die Sucher die Karte Stück für Stück auf und geben die Informationen an den Funker und dieser an die Basis weiter.
+Jeder Agent hat also einen eigenen internen Kenntnisstand seiner Umgebung, kann diesen aber immer wieder erweitern und dadurch bessere Entscheidungen treffen.
+\section{Konfigurationsmöglichkeiten}
+\subsection{Konfiguration während des Programmaufrufs}
+\subsection{Konfiguration vor dem Simulationsstart}
+\subsection{Konfiguration der Agenten}
+\end{document}
