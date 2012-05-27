@@ -6,14 +6,19 @@ import sim.engine.SimState;
 import sim.util.Bag;
 
 public class Caller extends AbstractAgent {
+	private int teamNr;
 	private Bag team = new Bag();
 	
-	public Caller(){
+	public Caller(int teamNr) {
+		this.teamNr = teamNr;
 		communicationRadius = 100;
 	}
 	
-	public void addTeamMember(AbstractAgent a ){
+	public void addTeamMember(AbstractAgent a){
 		team.add(a);
+	}
+	public void removeTeamMember(AbstractAgent a) {
+		team.remove(a);
 	}
 	
 	@Override

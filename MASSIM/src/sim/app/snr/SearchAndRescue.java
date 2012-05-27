@@ -7,6 +7,7 @@ import sim.app.snr.agent.Searcher;
 import sim.engine.*;
 import sim.field.grid.SparseGrid2D;
 import sim.field.grid.IntGrid2D;
+import sim.util.Bag;
 
 public class SearchAndRescue extends SimState {
 
@@ -56,16 +57,25 @@ public class SearchAndRescue extends SimState {
 				}
 			}
 		}
+		// add all teams
 		for (int i=0; i<numTeams; ++i) {
-		    Caller c = new Caller();
-		    agentGrid.setObjectLocation(c, startx,starty);
-		    schedule.scheduleRepeating(c);
-		
+		    Bag callers = new Bag();
+		    // add all callers of the team
+		    for (int j=0; j<numCallerPerTeam; j++) {
+			Caller c = new Caller(i);
+			agentGrid.setObjectLocation(c, startx,starty);
+			schedule.scheduleRepeating(c);
+			callers.add(c);
+		    }
+		    // add all agents of the team
 		    for (int j=0; j<numAgentsPerTeam; j++) {
-			Searcher x = new Searcher(c);
-			c.addTeamMember(x);
+			Searcher x = new Searcher(i);
 			agentGrid.setObjectLocation(x, startx,starty);
 			schedule.scheduleRepeating(x);
+			for (int k=0; k<numCallerPerTeam; k++) {
+			    ((Caller)callers.get(k)).addTeamMember(x);
+			    x.addTeamCaller((Caller)callers.get(k));
+			}
 		    }
 		}
 		

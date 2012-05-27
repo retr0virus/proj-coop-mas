@@ -3,17 +3,23 @@ package sim.app.snr.agent;
 import sim.app.snr.message.Message;
 import sim.app.snr.message.Ping;
 import sim.engine.SimState;
+import sim.util.Bag;
 
 public class Searcher extends AbstractAgent {
 	
-	private Caller c;
+	private int teamNr;
+	private Bag team = new Bag();
+	private Bag teamCaller = new Bag();
 	private double dirInertia = 0.95;
 	private double rightTurner = 0.5;
 	
-	public Searcher(Caller c ){
-		this.c = c;
+	public Searcher(int teamNr){
+		this.teamNr = teamNr;
 		communicationRadius = 15;
 		viewRadius = 10;
+	}
+	public void addTeamCaller(Caller a) {
+		teamCaller.add(a);
 	}
 	
 	private void swarm() {
