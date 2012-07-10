@@ -9,10 +9,8 @@ public class Ping extends Message {
 		// TODO Auto-generated constructor stub
 	}
 
-	@Override
-	public void transmit() {
-		receiver.receivePing(this);
-		//receiver.receiveMessage(this);
+	@Override public void transmit() {
+		receiver.receiveMessage(this);
 	}
 
 

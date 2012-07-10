@@ -147,7 +147,7 @@ public abstract class Properties implements java.io.Serializable
                 try { return _setValue(index,Byte.valueOf(value)); }
                 catch (NumberFormatException e) // try again for x.0 stuff
                     { 
-                    double d = Double.parseDouble(value); 
+                    double d = java.text.NumberFormat.getInstance(Locale.getDefault()).parse((value)).doubleValue(); 
                     byte b = (byte) d; 
                     if (b==d) return _setValue(index,new Byte(b)); 
                     else throw e; 
@@ -158,7 +158,7 @@ public abstract class Properties implements java.io.Serializable
                 try { return _setValue(index,Short.valueOf(value)); }
                 catch (NumberFormatException e) // try again for x.0 stuff
                     { 
-                    double d = Double.parseDouble(value); 
+                    double d = java.text.NumberFormat.getInstance(Locale.getDefault()).parse((value)).doubleValue(); 
                     short b = (short) d; 
                     if (b==d) return _setValue(index,new Short(b)); 
                     else throw e; 
@@ -169,7 +169,7 @@ public abstract class Properties implements java.io.Serializable
                 try { return _setValue(index,Integer.valueOf(value)); }
                 catch (NumberFormatException e) // try again for x.0 stuff
                     { 
-                    double d = Double.parseDouble(value); 
+                    double d = java.text.NumberFormat.getInstance(Locale.getDefault()).parse((value)).doubleValue(); 
                     int b = (int) d; 
                     if (b==d) return _setValue(index,new Integer(b)); 
                     else throw e; 
@@ -180,7 +180,7 @@ public abstract class Properties implements java.io.Serializable
                 try { return _setValue(index,Long.valueOf(value)); }
                 catch (NumberFormatException e) // try again for x.0 stuff
                     { 
-                    double d = Double.parseDouble(value); 
+                    double d = java.text.NumberFormat.getInstance(Locale.getDefault()).parse((value)).doubleValue(); 
                     long b = (long) d; 
                     if (b==d) return _setValue(index,new Long(b)); 
                     else throw e; 

@@ -2,8 +2,10 @@ package sim.app.snr.agent;
 
 import sim.app.snr.message.Message;
 import sim.app.snr.message.Ping;
+import sim.app.snr.message.MapUpdate;
 import sim.engine.SimState;
 import sim.util.Bag;
+import sim.field.grid.SparseGrid2D;
 
 public class Searcher extends AbstractAgent {
 	
@@ -12,9 +14,21 @@ public class Searcher extends AbstractAgent {
 	private Bag teamCaller = new Bag();
 	private double dirInertia = 0.95;
 	private double rightTurner = 0.5;
+	private int mapUpdateInterval = 25;
+
+	private SparseGrid2D localMapGrid = null;
+	private int curMapUpdateSteps = 0;
+	private int scale;
 	
-	public Searcher(int teamNr){
+	public enum InternalState { SWARM, MAPUPDATE }
+	private InternalState internalState = InternalState.SWARM;
+	private int maxWaitForMapUpdateTime = 10;
+	private int waitForMapUpdate = 0;
+
+	public Searcher(int teamNr, SparseGrid2D localMapGrid, int scale){
 		this.teamNr = teamNr;
+		this.localMapGrid = localMapGrid;
+		this.scale = scale; // needed for the information where the localMapGrid is filled -> position/scale
 		communicationRadius = 15;
 		viewRadius = 10;
 	}
@@ -25,6 +39,7 @@ public class Searcher extends AbstractAgent {
 	private void swarm() {
 		if (nextIsFree() && snr.random.nextDouble() < dirInertia) {
 			forward();
+			curMapUpdateSteps++;
 		}
 		else {
 			if (snr.random.nextDouble() < rightTurner) {
@@ -34,6 +49,28 @@ public class Searcher extends AbstractAgent {
 			}
 		}
 	}
+	/**
+	 * When updating the map, the caller has to locate the position
+	 * of the searcher.
+	 * The searcher has to wait for the "ok" of the caller
+	 * and hold its position while sending ping messages.
+	 */
+	private void waitForMapUpdateSignal() {
+	    //maximal waiting time: 10
+	    if (waitForMapUpdate > maxWaitForMapUpdateTime) {
+		this.internalState = InternalState.SWARM;
+		return;
+	    }
+	    ///for (int i=0; i<teamCaller.size(); ++i) {
+		//Ping p = new Ping(this, teamCaller.get(i));
+		//sendMessage(p);
+	    //}
+	    Ping p = new Ping(this, null);
+	    sendMessage(p);
+	}
+
+	public int getMapUpdateInterval() { return this.mapUpdateInterval; }
+	public void setMapUpdateInterval(int steps) { this.mapUpdateInterval = steps; }
 	
 	public double getDirInertia() { return this.dirInertia; }
 	public void setDirInertia(double value) { this.dirInertia = value; }
@@ -48,30 +85,49 @@ public class Searcher extends AbstractAgent {
 		if (r > 0)
 			this.viewRadius = r;
 	}
-	
+
 	@Override public void step(SimState state) {
+	    //System.out.println("Searcher scheduled");
 		updateInternalState(state);
 		updatePosition();
-		swarm();
+		switch (internalState) {
+		    case SWARM : swarm(); break;
+		    case MAPUPDATE : waitForMapUpdateSignal(); break;
+		    default :
+			System.out.printf("Unknown internal state %s.\n",internalState);
+			swarm();
+			break;
+		}
+		updateLocalMap();
+		if (curMapUpdateSteps == mapUpdateInterval) {
+		    // try to send map to caller
+		    // TODO
+		}
+	}
+
+	private void updateLocalMap() {
+	    int x = super.pos.x;
+	    int y = super.pos.y;
+	    // TODO
 	}
 	
 	@Override public void receiveMessage(Message m) {
 		if (m instanceof Ping) {
 			this.receive((Ping)m);
+		} else if (m instanceof MapUpdate) {
+			this.receive((MapUpdate)m);
 		} else {
-			System.out.println("No ping");
-			this.receive(m);
+			System.out.printf("Unknown Message: %s",m);
 		}
 	} 
 	
-	@Override public void receivePing(Ping p) {
-		System.out.println("ping");
-	}
-	
-	private void receive(Message m) {
-		System.out.println("WRONG!");
-	}
 	private void receive(Ping p) {
-		System.out.println("RIGHT!");
+		System.out.printf("PING: %s\n",p);
+	}
+	private void receive(MapUpdate mu) {
+		// if mu data is null and mu positionOk is true and the current state is MapUpdate
+		// then change to swarming
+		// else do nothing(?) with the map (cannot locate position)
+		System.out.printf("MapUpdate: %s\n",mu);
 	}
 }

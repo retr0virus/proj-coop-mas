@@ -48,15 +48,21 @@ public abstract class AbstractAgent implements Steppable {
 		if (c > 0)
 			this.communicationRadius = c;
 	}
+	public Int2D getPos() { return pos; }
 	
 	protected void examineTerrain(){
 		snr.terrain.area.getNeighborsHexagonalDistance(pos.x,pos.y,viewRadius,false,terrainValues,terrainXCoords,terrainYCoords);
 	}
 	
 	protected boolean nextIsFree(){
-		if (snr.terrain.area.get(pos.x+directions[dir].x, pos.y+directions[dir].y) != Terrain.WALL)
-			return true;
-		return false;
+	    int checkX = pos.x+directions[dir].x;
+	    int checkY = pos.y+directions[dir].y;
+	    if (snr.terrain.width > checkX && snr.terrain.height > checkY) {
+		if (snr.terrain.area.get(checkX, checkY) != Terrain.WALL) {
+		    return true;
+		}
+	    }
+	    return false;
 	}
 	
 	protected void updateInternalState(SimState state){
@@ -85,7 +91,6 @@ public abstract class AbstractAgent implements Steppable {
 	}
 	
 	public abstract void receiveMessage(Message m);
-	public abstract void receivePing(Ping p);
 	
 	@Override public String toString() { return "Nevermind|"+this.getClass().getName()+"@"+this.hashCode(); }
 }

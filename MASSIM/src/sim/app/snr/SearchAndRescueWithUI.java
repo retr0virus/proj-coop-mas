@@ -9,14 +9,13 @@ import sim.display.GUIState;
 import sim.engine.SimState;
 import sim.portrayal.grid.FastValueGridPortrayal2D;
 import sim.portrayal.grid.SparseGridPortrayal2D;
-import sim.portrayal.grid.ValueGridPortrayal2D;
 import sim.portrayal.simple.OvalPortrayal2D;
 
 public class SearchAndRescueWithUI extends GUIState {
 
 	FastValueGridPortrayal2D terrainPortrayal = new FastValueGridPortrayal2D("Terrain");
 	SparseGridPortrayal2D agentPortrayal = new SparseGridPortrayal2D();
-	ValueGridPortrayal2D baseMapPortrayal = new ValueGridPortrayal2D();
+	FastValueGridPortrayal2D baseMapPortrayal = new FastValueGridPortrayal2D();
 	public Display2D display;
 	public JFrame displayFrame;
 
@@ -40,8 +39,11 @@ public class SearchAndRescueWithUI extends GUIState {
 	}*/
 
 	public void start() {
+	    System.out.println("START");
 		super.start(); // starts the state too
 		SearchAndRescue snr = (SearchAndRescue) state;
+		if (!snr.started) return;
+		if (snr.terrain != null) { initDisplay(); }
 		terrainPortrayal.setField(snr.terrain.area);
 		terrainPortrayal.setMap(new sim.util.gui.SimpleColorMap(
 				snr.terrain.colorTable));
@@ -58,21 +60,33 @@ public class SearchAndRescueWithUI extends GUIState {
 		display.repaint();
 	}
 	
-    public void load(SimState state)
-    {
-    super.load(state);
-
-    }
+	public void load(SimState state) {
+	    super.load(state);
+	}
     
 	public void init(Controller c) {
 		super.init(c);
+		initDisplay();
+		
+	}
+	public void initDisplay() {
 		SearchAndRescue snr = (SearchAndRescue) state;
+		if (snr.terrain == null) return;
+		if (display != null) {
+		    JFrame f = (JFrame)display.getFrame();
+		    display.detatchAll();
+		    display.quit();
+		    super.controller.unregisterFrame(f);
+		    f.setVisible(false);
+		    f.dispose();
+		} 
 		display = new Display2D(snr.terrain.area.getWidth(),snr.terrain.area.getHeight(),  this); 
 		displayFrame = display.createFrame();
-		c.registerFrame(displayFrame);
+		super.controller.registerFrame(displayFrame);
 		displayFrame.setVisible(true);
 		display.attach(terrainPortrayal, "Terrain");
 		display.attach(agentPortrayal,"Agents");
+		display.attach(baseMapPortrayal,"Base Map", false);
 	}
 
 	public void quit() {

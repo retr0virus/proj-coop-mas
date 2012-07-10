@@ -1,12 +1,13 @@
 package sim.app.snr.message;
 
 import sim.app.snr.agent.AbstractAgent;
+import sim.field.grid.SparseGrid2D;
 
 public class MapUpdate extends Message {
     public int number = -1;
-    public Object map = null;
+    public SparseGrid2D map = null;
 
-    public MapUpdate(AbstractAgent s, AbstractAgent r, int msgNum, Object map) {
+    public MapUpdate(AbstractAgent s, AbstractAgent r, int msgNum, SparseGrid2D map) {
 	super(s, r);
 	this.number = msgNum;
 	this.map = map;
