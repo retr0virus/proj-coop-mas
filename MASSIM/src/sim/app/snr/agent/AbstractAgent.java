@@ -80,8 +80,10 @@ public abstract class AbstractAgent implements Steppable {
 	protected void sendMessage(Message m){
 		lookupReceivingAgents();
 		for (int i=0;i< agents.size();i++){
-			if (agents.get(i) == m.receiver || m.receiver == null) {
-					m.transmit();
+			if (agents.get(i) == m.receiver) {
+				m.transmit();
+			} else if (m.receiver == null) {
+				m.transmit((AbstractAgent)agents.get(i));
 			}
 		}
 	}

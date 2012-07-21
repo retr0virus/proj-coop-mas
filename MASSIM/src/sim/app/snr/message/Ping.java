@@ -6,14 +6,9 @@ public class Ping extends Message {
 
 	public Ping(AbstractAgent s, AbstractAgent r) {
 		super(s, r);
-		// TODO Auto-generated constructor stub
 	}
 
-	@Override public void transmit() {
-		receiver.receiveMessage(this);
+	@Override public void transmit(AbstractAgent aa) {
+	    aa.receiveMessage(this);
 	}
-
-
-
-	
 }

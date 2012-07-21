@@ -32,11 +32,28 @@ Die \textbf{Basis} ist eine theoretische, angenommene Größe des Systems. Sie s
 \subsection{Karte}
 Die Karte, auf dem die Simulation abläuft, wird beim Start des Simulators aus einer Grafik generiert.
 Die Farbinformation der Pixel bilden den Aufbau des Geländes ab. Ein schwarzer Punkt bedeutet eine Wand, ein weißer Punkt stellt freies Gelände dar, ein roter Punkt ein Gebiet von Interesse und ein blauer Punkt den Anfang, auf dem die Agenten starten.
-\subsection{Interne Karte}
-Basis und Agenten kennen die gesamte Karte am Anfang der Simulation noch nicht. Erst über die Zeit decken die Sucher die Karte Stück für Stück auf und geben die Informationen an den Funker und dieser an die Basis weiter.
-Jeder Agent hat also einen eigenen internen Kenntnisstand seiner Umgebung, kann diesen aber immer wieder erweitern und dadurch bessere Entscheidungen treffen.
 \section{Konfigurationsmöglichkeiten}
 \subsection{Konfiguration während des Programmaufrufs}
 \subsection{Konfiguration vor dem Simulationsstart}
-\subsection{Konfiguration der Agenten}
+
+\section{Strategien}
+% Strategie 1
+\subsection{Grobe Karte}
+Den Kern dieser Strategie bildet eine \emph{interne Karte}, die alle Sucher besitzen. Diese wird relativ zur Ausgangsposition des Agenten während der Suche aufgebaut und in periodischen Zeitabständen zu den Funkern und damit zur Basis weitergeleitet. Diese kann dadurch koordinierend auf die Agenten einwirken.
+\subsubsection{Aufbau der internen Karte}
+Basis und Agenten kennen die gesamte Karte am Anfang der Simulation noch nicht. Erst über die Zeit decken die Sucher die Karte Stück für Stück auf und geben die Informationen an den Funker und dieser an die Basis weiter.
+Jeder Agent hat also einen eigenen internen Kenntnisstand seiner aktuellen Umgebung, kann diesen aber immer wieder erweitern und dadurch bessere Entscheidungen treffen.
+Die interne Karte ist bei dieser Strategie relativ grob, d.h. sie fasst immer größere Teile der tatsächlichen Karte zusammen, und kennt nur die Zustände \emph{besucht} und \emph{nicht besucht} für jeden Kartenabschnitt.
+\subsubsection{Konfiguration der Agenten}
+
+% Strategie 2
+\subsection{Feine Karte}
+Diese Strategie ähnelt der \emph{groben Karte}. Auch hier lernen die Agenten Stück für Stück die Umgebung kennen, allerdings deutlich genauer als bei der vorher genannten Strategie.
+Die interne Karte bildet in dieser Strategie die vorliegende Ausgangskarte Stück für Stück ab und enthält auch die Information über vorhandene Wände, so dass eine noch genauere Planung durch die Basis möglich ist.
+Der Komplexitätszuwachs der Karte gegenüber der \emph{groben Karte} wird dadurch kompensiert, dass die Agenten nach einer erfolgten Übertragung der Karte an die Basis ihre Daten löschen müssen und daher auf genauere Anweisungen der Basis zwingend angewiesen sind, da sie aufgrund ihrer \emph{Vergesslichkeit} ihre Umgebung nicht \emph{kennenlernen}.
+\subsubsection{Konfiguration der Agenten}
+
+% Strategie 3
+\subsection{Strategie \#3}
+\subsubsection{Konfiguration der Agenten}
 \end{document}

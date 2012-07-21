@@ -12,5 +12,15 @@ public abstract class Message {
 		receiver = r;
 	}
 	
-	public abstract void transmit();
+	public void transmit() {
+	    if (receiver == null) {
+		throw new RuntimeException("Transmission without given receiver is not allowed.");
+	    }
+	    transmit(receiver);
+	}
+	public abstract void transmit(AbstractAgent r);
+
+	@Override public String toString() { 
+	    return String.format("MESSAGE from %s to %s.\n",sender,receiver);
+	}
 }
