@@ -50,17 +50,25 @@ public abstract class AbstractAgent implements Steppable {
 	}
 	public Int2D getPos() { return pos; }
 	
+	/** Lookup the terrain and get all values and coordinates within the viewRadius */
 	protected void examineTerrain(){
+		terrainValues = new IntBag();
+		terrainXCoords = new IntBag();
+		terrainYCoords = new IntBag();
 		snr.terrain.area.getNeighborsHexagonalDistance(pos.x,pos.y,viewRadius,false,terrainValues,terrainXCoords,terrainYCoords);
+		// here may be added some algorithm for fetching out objects "not in the line of sight"
 	}
 	
+	/** Lookup the terrain in move direction for walls in the next step.
+	 * @return true if there is no wall in move direction, false if there is a wall in move direction
+	 */
 	protected boolean nextIsFree(){
 	    int checkX = pos.x+directions[dir].x;
 	    int checkY = pos.y+directions[dir].y;
 	    if (snr.terrain.width > checkX && snr.terrain.height > checkY) {
-		if (snr.terrain.area.get(checkX, checkY) != Terrain.WALL) {
-		    return true;
-		}
+			if (snr.terrain.area.get(checkX, checkY) != Terrain.WALL) {
+				return true;
+			}
 	    }
 	    return false;
 	}

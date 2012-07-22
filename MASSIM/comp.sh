@@ -2,17 +2,21 @@
 COMPCP=.:src:lib/mason.16.jar
 OUTPUT=bin
 BASEDIR="src/"
-#FILES="sim/util/Properties"
-FILES=""
-DIRECTORIES="sim/util/ sim/app/snr/ sim/app/snr/agent/ sim/app/snr/message/ sim/app/snr/util/"
+FILES="sim/util/Properties"
+DIRECTORIES="sim/app/snr/ sim/app/snr/agent/ sim/app/snr/message/"
 
 OK=0
+
+if [[ ! -e bin ]]
+then
+	mkdir bin
+fi
 
 for i in $FILES
 do
 	if [[ ${OK} -eq 0 ]]
 	then
-		echo "Compiling ${BASEDIR}${i}.java"
+		echo "Compiling library file ${BASEDIR}${i}.java"
     	javac -d ${OUTPUT} -cp ${COMPCP} ${BASEDIR}${i}.java
 		OK=$?
 	else
