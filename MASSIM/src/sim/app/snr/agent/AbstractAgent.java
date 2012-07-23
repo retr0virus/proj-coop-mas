@@ -30,10 +30,16 @@ public abstract class AbstractAgent implements Steppable {
 	protected IntBag agentsXCoords =  new IntBag();
 	protected IntBag agentsYCoords = new IntBag();
 	
+	protected Int2D zeroPos = null; ///< for local map coords
+	protected int scale = 1;
+
+	protected void stepBack() {
+		snr.agentGrid.setObjectLocation(this, pos.x-directions[dir].x,pos.y-directions[dir].y);
+	}
 	protected void forward() {
 		snr.agentGrid.setObjectLocation(this, pos.x+directions[dir].x,pos.y+directions[dir].y);
 	}
-	
+
 	protected void turnLeft(){
 		//dir = new Int2D(dir.y,dir.x * -1);
 		dir = (dir == directions.length-1) ? 0 : dir+1;
@@ -59,13 +65,23 @@ public abstract class AbstractAgent implements Steppable {
 		// here may be added some algorithm for fetching out objects "not in the line of sight"
 	}
 	
+	protected boolean backIsFree() {
+		int checkX = pos.x-directions[dir].x;
+	    int checkY = pos.y-directions[dir].y;
+	    if (snr.terrain.width > checkX && checkX >= 0 && snr.terrain.height > checkY && checkY >= 0) {
+			if (snr.terrain.area.get(checkX, checkY) != Terrain.WALL) {
+				return true;
+			}
+	    }
+	    return false;
+	}
 	/** Lookup the terrain in move direction for walls in the next step.
 	 * @return true if there is no wall in move direction, false if there is a wall in move direction
 	 */
 	protected boolean nextIsFree(){
 	    int checkX = pos.x+directions[dir].x;
 	    int checkY = pos.y+directions[dir].y;
-	    if (snr.terrain.width > checkX && snr.terrain.height > checkY) {
+	    if (snr.terrain.width > checkX && checkX >= 0 && snr.terrain.height > checkY && checkY >= 0) {
 			if (snr.terrain.area.get(checkX, checkY) != Terrain.WALL) {
 				return true;
 			}
@@ -99,8 +115,38 @@ public abstract class AbstractAgent implements Steppable {
 	private void lookupReceivingAgents(){
 		snr.agentGrid.getNeighborsHexagonalDistance(pos.x, pos.y, communicationRadius, false, agents, agentsXCoords, agentsYCoords);
 	}
+
+	/** Calculates a local map position from an actual map position from the simulation model.
+	 * @return the local map position for this agent - it may differ from other agents positions even if they are standing on the same actual map position
+	 */
+	protected Int2D posToLocalMapPos(Int2D mapPos) {
+		return posToLocalMapPos(mapPos,this.scale);
+	}
+	
+	protected Int2D posToLocalMapPos(Int2D mapPos, int scale) {
+		return posToLocalMapPos(mapPos,scale,this.zeroPos);
+	}
+	protected static Int2D posToLocalMapPos(Int2D mapPos, int scale, Int2D zeroPos) {
+		int x = mapPos.x - zeroPos.x;
+		int y = mapPos.y - zeroPos.y;
+		// -6 -5 -4 -3 -2 -1  0 +1 +2 +3 +4 +5
+		// -3 -3 -2 -2 -1 -1  0  0 +1 +1 +2 +2 
+		if (x < 0) {
+			x = (x % scale == 0) ? (x/scale) : (x/scale-1);
+		} else {
+			x = x/scale;
+		}
+		if (y < 0) {
+			y = (y % scale == 0) ? (y/scale) : (y/scale-1);
+		} else {
+			y = y/scale;
+		}
+		return new Int2D(x,y);
+	}
 	
 	public abstract void receiveMessage(Message m);
 	
+	public int getLocalMapScale() { return scale; }
+
 	@Override public String toString() { return "Nevermind|"+this.getClass().getName()+"@"+this.hashCode(); }
 }

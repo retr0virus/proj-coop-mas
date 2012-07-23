@@ -22,14 +22,14 @@ public class Searcher extends AbstractAgent {
 
 	private SparseGrid2D localMapGrid = null;
 	private int curMapUpdateSteps = 0;
-	private int scale = -1;
 	
 	public enum InternalState { SWARM, MAPUPDATE }
 	private InternalState internalState = InternalState.SWARM;
 	private int maxWaitForMapUpdateTime = 10;
 	private int waitForMapUpdate = 0; ///< max waiting-time
-	private Int2D zeroPos = null; ///< for local map coords
 	private int lastSentMUNumber = -1; ///< needed for MU-answer from Caller
+
+	private double forceToCaller = 0.01;
 
 	private Bag allLocalMapCoordCounts = null;
 
@@ -44,6 +44,18 @@ public class Searcher extends AbstractAgent {
 		teamCaller.add(a);
 	}
 	
+	private void backToCaller() {
+		if (backIsFree()) {
+			stepBack();
+			//curMapUpdateSteps++;
+		} else {
+			if (snr.random.nextDouble() < rightTurner) {
+				turnLeft();
+			} else {
+				turnRight();
+			}
+		}
+	}
 	private void swarm() {
 		if (nextIsFree() && snr.random.nextDouble() < dirInertia) {
 			forward();
@@ -78,6 +90,9 @@ public class Searcher extends AbstractAgent {
 			sendMessage(p);
 		}
 	}
+	public double getForceToCaller() { return this.forceToCaller; }
+	public void setForceToCaller(double value) { this.forceToCaller = value; }
+	public Object domForceToCaller() { return new sim.util.Interval(0.0, 1.0); }
 
 	public int getMapUpdateInterval() { return this.mapUpdateInterval; }
 	public void setMapUpdateInterval(int steps) { this.mapUpdateInterval = steps; }
@@ -96,14 +111,13 @@ public class Searcher extends AbstractAgent {
 			this.viewRadius = r;
 	}
 
-	public int getLocalMapScale() { return scale; }
-
 	@Override public void step(SimState state) {
 		//System.out.println("Searcher scheduled");
 		updateInternalState(state); // get current state
 		updatePosition(); // get current position
 		if (zeroPos == null) {
-			zeroPos = new Int2D(super.pos.x,super.pos.y);
+			zeroPos = new Int2D(0,0);
+			//zeroPos = new Int2D(super.pos.x,super.pos.y);
 		}
 		switch (internalState) {
 			case SWARM : swarm(); break;
@@ -123,6 +137,7 @@ public class Searcher extends AbstractAgent {
 				SparseGrid2D map = localMapGrid;
 				MapUpdate mu = new MapUpdate(this, c, ++lastSentMUNumber, map, posToLocalMapPos(super.pos), false);
 				super.sendMessage(mu);
+				//System.out.printf("Sending MapUpdate from %d,%d (Local %d,%d).",super.pos.x,super.pos.y,mu.agentpos.x,mu.agentpos.y);
 			}
 		}
 	}
@@ -130,7 +145,7 @@ public class Searcher extends AbstractAgent {
 	/** Calculates a local map position from an actual map position from the simulation model.
 	 * @return the local map position for this agent - it may differ from other agents positions even if they are standing on the same actual map position
 	 */
-	private Int2D posToLocalMapPos(Int2D mapPos) {
+	/*protected Int2D posToLocalMapPos(Int2D mapPos) {
 		int x = mapPos.x - this.zeroPos.x;
 		int y = mapPos.y - this.zeroPos.y;
 		// -6 -5 -4 -3 -2 -1  0 +1 +2 +3 +4 +5
@@ -146,7 +161,7 @@ public class Searcher extends AbstractAgent {
 			y = y/scale;
 		}
 		return new Int2D(x,y);
-	}
+	}*/
 	private Bag localMapPosToPos(Int2D localPos) {
 		Bag res = new Bag();
 		int x = localPos.x * scale;
@@ -164,11 +179,25 @@ public class Searcher extends AbstractAgent {
 	}
 	private void buildLocalMapCoordCounts() {
 		Bag localMapCoords = new Bag(); // contains all localPos/numberOfLocalPos-pairs (how many times a specific localMapCoord exists)
+		// HashMap fixed the REALLY slow Bag implementation of this method...
+		java.util.HashMap<Integer, java.util.HashMap<Integer, Integer>>  counts = new java.util.HashMap<Integer, java.util.HashMap<Integer,Integer>>();
 		for (int w=0; w<snr.terrain.width; ++w) {
 			for (int h=0; h<snr.terrain.height; ++h) {
 				Int2D localCoord = posToLocalMapPos(new Int2D(w,h));
 				boolean exists = false;
-				for (int j=0; j<localMapCoords.size(); ++j) {
+				//System.out.printf("MapCoordCount for %d,%d.\n",localCoord.x,localCoord.y);
+				if (counts.containsKey(localCoord.x)) {
+					if (counts.get(localCoord.x).containsKey(localCoord.y)) {
+						int num = counts.get(localCoord.x).get(localCoord.y);
+						counts.get(localCoord.x).put(localCoord.y,num+1);
+					} else {
+						counts.get(localCoord.x).put(localCoord.y,1);
+					}
+				} else {
+					counts.put(localCoord.x,new java.util.HashMap<Integer,Integer>());
+					counts.get(localCoord.x).put(localCoord.y,1);
+				}
+				/*for (int j=0; j<localMapCoords.size(); ++j) {
 					Int2D coord = (Int2D)(((Object[])localMapCoords.get(j))[0]);
 					int count = (int)(((Object[])localMapCoords.get(j))[1]);
 					if (coord.x == localCoord.x && coord.y == localCoord.y) {
@@ -179,7 +208,12 @@ public class Searcher extends AbstractAgent {
 				}
 				if (!exists) {
 					localMapCoords.add(new Object[] { localCoord, 1 });
-				}
+				}*/
+			}
+		}
+		for (Integer x : counts.keySet()) {
+			for (Integer y : counts.get(x).keySet()) {
+				localMapCoords.add(new Object[] { new Int2D(x,y), counts.get(x).get(y) });
 			}
 		}
 		allLocalMapCoordCounts = localMapCoords;
@@ -194,6 +228,7 @@ public class Searcher extends AbstractAgent {
 			buildLocalMapCoordCounts();
 		}
 		// collect all coords
+		// INFO: maybe replace bags with more performant HashMaps...
 		Bag allLocalCoords = new Bag(); // contains all pos/localPos-pairs
 		Bag localMapCoords = new Bag(); // contains all localPos/numberOfLocalPos-pairs (how many times a specific localMapCoord exists)
 		for (int i=0; i<terrainValues.size(); ++i) {
@@ -228,8 +263,6 @@ public class Searcher extends AbstractAgent {
 					if (count == count2) {
 						res.add(coord);
 						//System.out.printf("Complete: [%d,%d] %d times.\n",coord.x,coord.y,count);
-					} else { 
-						//System.out.printf("Incomplete: [%d,%d] %d of %d times.\n",coord.x,coord.y,count,count2);
 					}
 					break;
 				}
@@ -268,23 +301,28 @@ public class Searcher extends AbstractAgent {
 		return false;
 	}
 	private void updateLocalMap() {
+		//System.out.printf("Updating local map\n");
 		// update needed
 		Bag toUpdate = currentViewToLocalMapPos();
 		for (int i=0; i<toUpdate.size(); ++i) {
 			Int2D localCoord = (Int2D)toUpdate.get(i);
 			if (localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y) == null || ((Value)localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y).get(0)).get().equals(Terrain.POI)) { // check only if null or poi (could be vpoi now)
 				boolean poi = containsPOI(localMapPosToPos(localCoord));
-				System.out.printf("%s POI at local position %d,%d.\n",(poi?"There is a":"No"),localCoord.x,localCoord.y);
+				//System.out.printf("%s POI at local position %d,%d.\n",(poi?"There is a":"No"),localCoord.x,localCoord.y);
 				// A "Value"-object is needed because an Integer would be "moved" to the new coords but we need separate objects for each position
 				if (poi) {
-					boolean ok = localMapGrid.setObjectLocation(new Value(Terrain.POI), localCoord);
+					if (localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y) == null) {
+						boolean ok = localMapGrid.setObjectLocation(new Value(Terrain.POI), localCoord);
+					}
 					//System.out.printf("Detected POI within localMapCoord %d,%d. %s\n",localCoord.x,localCoord.y, ok);
-					Bag b = localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y);
-					System.out.printf("\t--> %s\n",(b!=null?((Value)b.get(0)):"NULL"));
+					//Bag b = localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y);
+					//System.out.printf("\t--> %s\n",(b!=null?((Value)b.get(0)):"NULL"));
 				} else {
-					boolean ok = localMapGrid.setObjectLocation(new Value(Terrain.WAY), localCoord);
+					if (localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y) == null) {
+						boolean ok = localMapGrid.setObjectLocation(new Value(Terrain.WAY), localCoord);
+					}
 					//System.out.printf("Nothing interesting at %d,%d. %s\n",localCoord.x,localCoord.y, ok);
-					Bag b = localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y);
+					//Bag b = localMapGrid.getObjectsAtLocation(localCoord.x,localCoord.y);
 					//System.out.printf("\t--> %s\n",(b!=null?((Value)b.get(0)):"NULL"));
 				}
 			}
